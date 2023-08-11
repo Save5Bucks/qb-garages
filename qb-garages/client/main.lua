@@ -70,6 +70,7 @@ local function DestroyZone(type, index)
 end
 
 local function CreateZone(type, garage, index)
+    -- print("1 ", type, garage, index)
     local size
     local coords
     local heading
@@ -121,8 +122,9 @@ local function CreateZone(type, garage, index)
         debugPoly = false
     })
     garageZones[type .. "_" .. index].zonecombo:onPlayerInOut(function(isPointInside)
-        -- print(index, isPointInside, type)
+        print(index, isPointInside, type)
         if isPointInside == true then
+            TriggerServerEvent("qb-garage:server:in_mlo_0", index)
             local text
             if type == "in" then
                 if garage.type == "house" then
@@ -176,6 +178,7 @@ local function CreateZone(type, garage, index)
             end
         end
         if isPointInside == false then
+            TriggerServerEvent("qb-garage:server:in_mlo_1", index)
             if type == "marker" then
                 if currentGarage == garage then
                     if garage.type ~= "depot" then
@@ -209,8 +212,11 @@ local function CreateZone(type, garage, index)
                 garage_menu = false
             end
             if type == "out" then
+                InputOut = false
+                InputIn = false
                 closeMenuFull()
                 exports['qb-core']:HideText()
+                garage_menu = false
             end
         end
     end)
@@ -468,6 +474,14 @@ local function CreateBlipsZones()
 end
 
 RegisterNetEvent('qb-garages:client:setHouseGarage', function(house, hasKey)
+    --- need to get onplayer load to sethouse garage
+    ---@param result any
+    QBCore.Functions.TriggerCallback("qb-garage:server:in_mlo", function(result)
+        --print("in out: ", result[1].in_mlo)
+        if hasKey and result[1].in_mlo == 0 then
+            CreateZone("hmarker", HouseGarages[house], house)
+        end
+    end, house)
     if HouseGarages[house] then
         if lasthouse ~= house then
             if lasthouse then
